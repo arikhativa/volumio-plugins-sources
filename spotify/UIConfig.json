@@ -44,13 +44,30 @@
         ]}
       },
       {
-        "id":"logout",
-        "element": "button",
-        "label": "TRANSLATE.LOGOUT",
-        "description": "TRANSLATE.LOGOUT",
-        "onClick": {"type":"emit", "message":"callMethod", "data":{"endpoint":"music_service/spop","method":"logout","data":""}},
-        "hidden": true
-      }
+          "id":"logout",
+          "element": "button",
+          "label": "TRANSLATE.LOGOUT",
+          "description": "TRANSLATE.LOGOUT",
+          "onClick": {"type":"emit", "message":"callMethod", "data":{"endpoint":"music_service/spop","method":"logout","data":""}},
+          "hidden": true
+        },
+        {
+            "id":"saveUser",
+            "element": "button",
+            "label": "Save User",
+            "description": "Save User",
+            "onClick": {"type":"emit", "message":"callMethod", "data":{"endpoint":"music_service/spop","method":"addUser","data":""}},
+            "hidden": false
+        },
+        {
+            "id":"useUser",
+            "element": "select",
+            "label": "Use User",
+            "description": "Use User",
+            "value": null,
+            "options": [],
+            "hidden": false
+        }
     ]
   },
     {

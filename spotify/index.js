@@ -99,6 +99,20 @@ ControllerSpotify.prototype.onStart = function () {
 };
 
 
+ControllerSpotify.prototype.setUserList = function (uiconf) {
+    var self = this;
+
+    var elem = uiconf.sections[1].content[3];
+    var userList = self.config.get('userList', undefined);
+
+    for (let i = 0; i < userList.length; i++) {
+        elem.options[i] = {
+            "value": i + 1,
+            "label": userList[i].display_name
+        }
+    }
+}
+
 ControllerSpotify.prototype.getUIConfig = function () {
     var defer = libQ.defer();
     var self = this;
@@ -109,6 +123,7 @@ ControllerSpotify.prototype.getUIConfig = function () {
         __dirname + '/i18n/strings_en.json',
         __dirname + '/UIConfig.json')
         .then(function (uiconf) {
+            self.setUserList(uiconf);
             var credentials_type = self.config.get('credentials_type', 'zeroconf');
             if (self.loggedInUserId !== undefined && credentials_type === 'spotify_token') {
                 uiconf.sections[1].content[0].hidden = true;
@@ -891,6 +906,44 @@ ControllerSpotify.prototype.externalOauthLogin = function (data) {
     return defer.promise
 };
 
+ControllerSpotify.prototype.addUser = function () {
+    var self = this;
+
+    var userList = self.config.get('userList', undefined);
+    if (userList === undefined)
+    {
+        userList = new Array();
+        config.addConfigValue('userList','array', userList);
+    }
+    
+    let user = {
+        display_name: self.config.get('display_name', ''), 
+        logged_user_id: self.config.get('logged_user_id', ''), 
+        access_token: self.config.get('access_token', ''), 
+        refresh_token: self.config.get('refresh_token', ''), 
+        credentials_type: self.config.get('credentials_type', '')
+    };
+    if (user.access_token === '')
+    {
+        console.log("YY empty user");
+        return ;
+    }
+
+    userList.push(user);
+    self.config.set('userList', userList);
+
+    self.deleteCredentialsFile();
+    self.resetSpotifyCredentials();
+    setTimeout(()=>{
+        self.initializeLibrespotDaemon();
+    }, 1000);
+
+
+    self.commandRouter.pushToastMessage('success', "added user", "added user success");
+    superagent.post('https://oauth-performer.dfs.volumio.org/spotify/accessToken')
+    // self.commandRouter.pushToastMessage('success', self.getI18n('LOGOUT'), self.getI18n('LOGOUT_SUCCESSFUL'));
+}
+
 ControllerSpotify.prototype.logout = function (avoidBroadcastUiConfig) {
     var self=this;
 
@@ -1048,6 +1101,7 @@ ControllerSpotify.prototype.getUserInformations = function () {
         .then(function(data) {
             if (data && data.body) {
                 self.debugLog('User informations: ' + JSON.stringify(data.body));
+                self.config.set('display_name', data.body.display_name);
                 self.loggedInUserId = data.body.id;
                 self.userCountry = data.body.country || 'US';
                 self.config.set('logged_user_id', self.loggedInUserId);
